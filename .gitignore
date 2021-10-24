@@ -3,3 +3,15 @@
 ################################################################################
 
 /HackRFDisplay/.vs/HackRFDisplay/v16
+*.tlog
+*.obj
+*.log
+*.pdb
+*.idb
+/HackRFDisplay/HackRFScreenShoter/x64
+*.recipe
+*.ilk
+/HackRFDisplay/x64/Debug/HackRFDisplay.vcxproj.FileListAbsolute.txt
+/HackRFDisplay/x64/Release/HackRFDisplay.vcxproj.FileListAbsolute.txt
+*.iobj
+*.ipdb

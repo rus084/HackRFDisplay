@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="CyclicBuffer">
+      <UniqueIdentifier>{5eb51ed3-19f0-4eae-b077-dfbbc141f9c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hackrf">
+      <UniqueIdentifier>{70a33c0d-ddc5-4f4d-b7cb-88a07e32f600}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SECAM_FrameBuffer">
+      <UniqueIdentifier>{2937bd68-fe37-481f-b62a-8d77a4458105}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\CyclicBuffer\CyclicBuffer.cpp">
+      <Filter>CyclicBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hackrf\HackRFdevice.cpp">
+      <Filter>hackrf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SECAM_FrameBuffer\SECAM_FrameBuffer.cpp">
+      <Filter>SECAM_FrameBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\HackRFScreenShoter\GDI_CapturingAnImage.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\CyclicBuffer\CyclicBuffer.h">
+      <Filter>CyclicBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hackrf\HackRFdevice.h">
+      <Filter>hackrf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SECAM_FrameBuffer\SECAM_FrameBuffer.h">
+      <Filter>SECAM_FrameBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\HackRFScreenShoter\GDI_CapturingAnImage.h" />
+    <ClInclude Include="..\..\src\HackRFScreenShoter\Resource.h" />
+    <ClInclude Include="..\..\src\HackRFScreenShoter\targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\src\HackRFScreenShoter\GDI_CapturingAnImage.rc" />
+  </ItemGroup>
+</Project>

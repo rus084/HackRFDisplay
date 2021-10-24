@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="hackrf">
+      <UniqueIdentifier>{e93d6f65-67fb-46fc-bf6e-acf7356ec8e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SECAM_FrameBuffer">
+      <UniqueIdentifier>{f9be8e28-7ac4-4755-be33-66e9638060d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CyclicBuffer">
+      <UniqueIdentifier>{19e08c96-d550-49ff-9c5c-7f08adff69e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SoundProcessor">
+      <UniqueIdentifier>{b3ce9506-2c8f-4c70-8e30-31cf09122599}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ljb_vmon">
+      <UniqueIdentifier>{89b1060b-3d76-4eee-b94b-db5262046cc1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\hackrf\HackRFdevice.cpp">
+      <Filter>hackrf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CyclicBuffer\CyclicBuffer.cpp">
+      <Filter>CyclicBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SECAM_FrameBuffer\SECAM_FrameBuffer.cpp">
+      <Filter>SECAM_FrameBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoundProcessor\SoundProcessor.cpp">
+      <Filter>SoundProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ljb_vmon\ljb_vmon_dbgprint.c">
+      <Filter>ljb_vmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ljb_vmon\ljb_vmon_dump_buffer.c">
+      <Filter>ljb_vmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ljb_vmon\ljb_vmon_guid.c">
+      <Filter>ljb_vmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ljb_vmon\ljb_vmon_pixel_main.c">
+      <Filter>ljb_vmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ljb_vmon\ljb_vmon_main.c">
+      <Filter>ljb_vmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ljb_vmon\notify.c">
+      <Filter>ljb_vmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\HackRFDisplay\hackrf.cpp" />
+    <ClCompile Include="..\src\HackRFDisplay\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\hackrf\HackRFdevice.h">
+      <Filter>hackrf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\CyclicBuffer\CyclicBuffer.h">
+      <Filter>CyclicBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SECAM_FrameBuffer\SECAM_FrameBuffer.h">
+      <Filter>SECAM_FrameBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoundProcessor\SoundProcessor.h">
+      <Filter>SoundProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoundProcessor\UDPSocket.h">
+      <Filter>SoundProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ljb_vmon\driver.h">
+      <Filter>ljb_vmon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ljb_vmon\lci_display_internal_ioctl.h">
+      <Filter>ljb_vmon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ljb_vmon\lci_usbav_guid.h">
+      <Filter>ljb_vmon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ljb_vmon\ljb_vmon.h">
+      <Filter>ljb_vmon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ljb_vmon\ljb_vmon_guid.h">
+      <Filter>ljb_vmon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ljb_vmon\ljb_vmon_ioctl.h">
+      <Filter>ljb_vmon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ljb_vmon\notify.h">
+      <Filter>ljb_vmon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ljb_vmon\public.h">
+      <Filter>ljb_vmon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ljb_vmon\resource.h">
+      <Filter>ljb_vmon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\HackRFDisplay\hackrf.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\ljb_vmon\notify.rc">
+      <Filter>ljb_vmon</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\src\ljb_vmon\toaster.ico">
+      <Filter>ljb_vmon</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
