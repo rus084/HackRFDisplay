@@ -22,6 +22,7 @@ SECAM_FrameBuffer::SECAM_FrameBuffer(int sample_rate, std::function<void()>* fra
 	bufferSize = buffer_count * 2;
 	rowLength = bufferSize / rows;
 	buffer = new char[bufferSize];
+	interOffset = (rowLength / 2) - (rowLength / 4);
 	fillBuffer(buffer);
 	FrameDrawer->setNewBuffer(bufferSize, buffer);
 }
@@ -54,7 +55,7 @@ void SECAM_FrameBuffer::fillBuffer(char* buf)
 	{
 		int frameSyncLen = rowLength * 5 / 2;
 		memset(&buf[0], SYNC_LEVEL, frameSyncLen);
-		int f2SyncBeg = getRowIndex(rows / 2 + 1) + (rowLength / 2) - (rowLength / 4);
+		int f2SyncBeg = getRowIndex(rows / 2 + 1) + interOffset;
 		memset(&buf[f2SyncBeg], SYNC_LEVEL, frameSyncLen);
 	}
 
@@ -92,7 +93,7 @@ int SECAM_FrameBuffer::getFBRowIndex(int row)
 }
 
 
-static char Color32BPPTobyte(unsigned long int* data)
+static uint16_t Color32BPPTobyte(uint32_t* data)
 {
 	unsigned long int temp = *data;
 	unsigned char r = (unsigned char)(temp >> 0) & 0xFF;
@@ -103,8 +104,10 @@ static char Color32BPPTobyte(unsigned long int* data)
 	//float y = (0.299 * r + 0.587 * g + 0.114 * b) / 256.0;
 	float y = (0.2627f * r + 0.678f * g + 0.0593f * b) / 256.0f;
 
-	float out = y * (WHITE_LEVEL - BLACK_LEVEL) + BLACK_LEVEL;
-	char ret = (char)out;
+
+	char out = (char)(y * (WHITE_LEVEL - BLACK_LEVEL) + BLACK_LEVEL);
+
+	char ret = (out ) | (out << 8);
 	return ret;
 }
 
@@ -115,13 +118,12 @@ void SECAM_FrameBuffer::LoadBitMap32Bpp(int Xsize, int Ysize, int offsetx, int o
 
 	for (int i = 0; i < rowsToDraw; i++)
 	{
-		unsigned long int* inPtr = (unsigned long int*) &data[(Xsize * i) * 4];
-		char* outPtr = (char*) &buffer[getFBRowIndex(i + offsety)] + offsetx;
+		uint32_t* inPtr = (uint32_t*) &data[(Xsize * i) * 4];
+		uint16_t* outPtr = (uint16_t*) &buffer[getFBRowIndex(i + offsety)] + offsetx;
 
 		for (int j = 0; j < collumsToDraw; j++)
 		{
-			char tmp = Color32BPPTobyte(inPtr++);
-			*(outPtr++) = tmp;
+			uint16_t tmp = Color32BPPTobyte(inPtr++);
 			*(outPtr++) = tmp;
 		}
 	}
@@ -139,13 +141,12 @@ void SECAM_FrameBuffer::LoadBitMap32BppMirrorV(int Xsize, int Ysize, char* data)
 
 	for (int i = 0; i < rowsToDraw; i++)
 	{
-		unsigned long int* inPtr = (unsigned long int*) & data[(Xsize * i) * 4];
-		char* outPtr = (char*)&buffer[getFBRowIndex(rowsToDraw - 1 - i)];
+		uint32_t* inPtr = (uint32_t*) & data[(Xsize * i) * 4];
+		uint16_t* outPtr = (uint16_t*)&buffer[getFBRowIndex(rowsToDraw - 1 - i)];
 
 		for (int j = 0; j < collumsToDraw; j++)
 		{
-			char tmp = Color32BPPTobyte(inPtr++);
-			*(outPtr++) = tmp;
+			uint16_t tmp = Color32BPPTobyte(inPtr++);
 			*(outPtr++) = tmp;
 		}
 	}

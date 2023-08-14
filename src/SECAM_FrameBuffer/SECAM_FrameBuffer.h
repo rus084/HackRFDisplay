@@ -22,7 +22,10 @@ public:
 	int visibleCollums;
 	int visibleRows;
 	int sample_rate;
-private:
+
+
+	int interOffset;
+//private:
 	void drawCompleteCallback();
 	void fillBuffer(char* buffer);
 	int getRowIndex(int row);

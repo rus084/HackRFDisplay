@@ -5,6 +5,7 @@
 #define WIN32_LEAN_AND_MEAN             // Исключите редко используемые компоненты из заголовков Windows
 // Файлы заголовков Windows
 #include <windows.h>
+#include <commctrl.h>
 // Файлы заголовков среды выполнения C
 #include <stdlib.h>
 #include <malloc.h>
@@ -207,8 +208,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     hackrf->OpenAny();
     hackrf->set_freq(770000000);
     hackrf->set_sample_rate(sampleRate);
-    hackrf->amp_enable(true);
-    hackrf->set_txvga_gain(20);
+    hackrf->amp_enable(false);
+    hackrf->set_txvga_gain(10);
 
     std::function<void()> frameRequestFunc = std::bind(ScreenShotReqest);
     fb = new SECAM_FrameBuffer(sampleRate, &frameRequestFunc);
@@ -299,6 +300,9 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
+
+HWND hwndTrack;
+
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance; // Store instance handle in our global variable
@@ -313,6 +317,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
+
+    hwndTrack = CreateWindow(L"msctls_trackbar32", L"",
+        WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_TRANSPARENTBKGND | TBS_AUTOTICKS | TBS_TOOLTIPS,
+        20, 20,
+        90, 30,
+        hWnd,
+        (HMENU)IDM_SLIDER,
+        hInstance, NULL);
 
     return TRUE;
 }
@@ -329,6 +341,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    static int gain = 10;
     switch (message)
     {
     case WM_COMMAND:
@@ -339,6 +352,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case IDM_EXIT:
             DestroyWindow(hWnd);
+            break;
+        case IDM_INTEROFFSET_P:
+            //hackrf->set_txvga_gain(++gain);
+            fb->interOffset+= 10;
+            fb->fillBuffer(fb->buffer);
+            break;
+        case IDM_INTEROFFSET_M:
+            hackrf->set_txvga_gain(--gain);
+            fb->interOffset-= 10;
+            fb->fillBuffer(fb->buffer);
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
@@ -360,6 +383,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     //break;
     case WM_DESTROY:
         PostQuitMessage(0);
+        break;
+    case WM_HSCROLL:
+        switch (LOWORD(wParam)) {
+
+        case TB_ENDTRACK:
+        {
+            DWORD dwPos = SendMessage(hwndTrack, TBM_GETPOS, 0, 0);
+
+           fb->interOffset = fb->rowLength * dwPos / 100;
+           fb->fillBuffer(fb->buffer);
+        }
+
+
+
+            break;
+
+        default:
+
+            break;
+        }
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
