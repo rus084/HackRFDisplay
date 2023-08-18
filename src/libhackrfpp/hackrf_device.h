@@ -2,6 +2,8 @@
 
 #include <hackrf.h>
 #include <functional>
+#include <memory>
+#include <string>
 
 #define FD_BUFFER_SIZE (8*1024)
 
@@ -25,44 +27,19 @@
 #define BASEBAND_FILTER_BW_MIN (1750000)  /* 1.75 MHz min value */
 #define BASEBAND_FILTER_BW_MAX (28000000) /* 28 MHz max value */
 
-
-class HackRfdeviceList
-{
-public:
-	HackRfdeviceList() 
-	{
-		list = hackrf_device_list();
-	}
-
-	~HackRfdeviceList()
-	{
-		hackrf_device_list_free(list);
-	}
-
-	int count() {
-		return list->devicecount;
-	}
-
-	char* getSN(int index)
-	{
-		if (index >= count())
-			return nullptr;
-		return list->serial_numbers[index];
-	}
-
-
-
-private:
-	hackrf_device_list_t* list;
-};
-
 class HackRFdevice
 {
 public:
+	class ICallbackListener {
+	public:
+		virtual int onHackRfCallback(hackrf_transfer*) = 0;
+	};
+
+public:
 	HackRFdevice();
 	~HackRFdevice();
-	void OpenAny();
-	void Close();
+	void openAny();
+	void close();
 
 	void set_sample_rate(const double freq_hz);
 	void set_freq(const uint64_t freq_hz);
@@ -71,10 +48,21 @@ public:
 	void set_lna_gain(uint32_t value);
 	void set_vga_gain(uint32_t value);
 	
-	void startTransmit(std::function<int(hackrf_transfer*)>* callback);
-	void startReceive(std::function<int(hackrf_transfer*)>* callback);
+	void startTransmit();
+	void startReceive();
 	void transferAbort();
+
+	void setCallbackListener(std::weak_ptr<ICallbackListener> callbackListener);
+
 private:
+	static int hackRFdeviceCallback(hackrf_transfer* transfer);
+
+private:
+	bool receive_ = false;
+	bool transmit_ = false;
+
+	std::weak_ptr<ICallbackListener> callbackListener_;
+
 	hackrf_device* device = nullptr;
 };
 

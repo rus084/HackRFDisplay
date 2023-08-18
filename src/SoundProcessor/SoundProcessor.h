@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "hackrf/HackRFdevice.h"
+#include <libhackrfpp/hackrf_device.h>
 #include "UDPSocket.h"
 
 class SoundProcessor

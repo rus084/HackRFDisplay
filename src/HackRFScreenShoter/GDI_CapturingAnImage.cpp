@@ -15,11 +15,12 @@
 #include "GDI_CapturingAnImage.h"
 
 #include <functional>
-#include <hackrf/HackRFdevice.h>
-#include <SECAM_FrameBuffer/SECAM_FrameBuffer.h>
+#include <libhackrfpp/hackrf_device.h>
+#include <secam_framebuffer/secam_framebuffer.h>
+#include <circular_buffer/circular_buffer.h>
 
-SECAM_FrameBuffer* fb;
-HackRFdevice* hackrf;
+std::shared_ptr<SECAM_FrameBuffer> fb;
+std::shared_ptr<HackRFdevice> hackrf;
 
 volatile bool Exiting = false;
 
@@ -42,11 +43,6 @@ HANDLE ScreenShotThreadSemaphore;
 
 int CaptureAnImage(HWND hWnd);
 
-void ScreenShotReqest()
-{
-   // PostMessage(hWnd, WM_USER_MAKE_SCREENSHOT, 0, 0);
-    ReleaseSemaphore(ScreenShotThreadSemaphore, 1, 0);
-}
 
 DWORD WINAPI ScreenShotThreadLoop(LPVOID lpParam)
 {
@@ -204,17 +200,34 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     int sampleRate = 15000000;
 
-    hackrf = new HackRFdevice();
-    hackrf->OpenAny();
+    hackrf = std::make_shared<HackRFdevice>();
+    hackrf->openAny();
     hackrf->set_freq(770000000);
     hackrf->set_sample_rate(sampleRate);
     hackrf->amp_enable(false);
     hackrf->set_txvga_gain(10);
 
-    std::function<void()> frameRequestFunc = std::bind(ScreenShotReqest);
-    fb = new SECAM_FrameBuffer(sampleRate, &frameRequestFunc);
-    std::function<int(hackrf_transfer*)> hackRfCallback = std::bind(&CyclicBuffer::HackRFcallback, fb->FrameDrawer, std::placeholders::_1);
-    hackrf->startTransmit(&hackRfCallback);
+    
+    auto circularBuf = std::make_shared<CircularBuffer>();
+    fb = std::make_shared<SECAM_FrameBuffer>(sampleRate);
+
+
+    class FbListener : public SECAM_FrameBuffer::IListener {
+    public:
+        void onFrameRequest() override {
+            // PostMessage(hWnd, WM_USER_MAKE_SCREENSHOT, 0, 0);
+            ReleaseSemaphore(ScreenShotThreadSemaphore, 1, 0);
+        }
+    };
+
+    auto fbListener = std::make_shared<FbListener>();
+
+    hackrf->setCallbackListener(circularBuf);
+    circularBuf->setListener(fb);
+    fb->setListener(fbListener);
+
+
+    hackrf->startTransmit();
 
 
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
@@ -261,7 +274,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     );
 
     hackrf->transferAbort();
-    hackrf->Close();
+    hackrf->close();
 
     return (int)msg.wParam;
 }
@@ -355,13 +368,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case IDM_INTEROFFSET_P:
             //hackrf->set_txvga_gain(++gain);
-            fb->interOffset+= 10;
-            fb->fillBuffer(fb->buffer);
+            //fb->interOffset+= 10;
+            //fb->fillBuffer(fb->buffer);
             break;
         case IDM_INTEROFFSET_M:
-            hackrf->set_txvga_gain(--gain);
-            fb->interOffset-= 10;
-            fb->fillBuffer(fb->buffer);
+            //hackrf->set_txvga_gain(--gain);
+            //fb->interOffset-= 10;
+           // fb->fillBuffer(fb->buffer);
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
@@ -391,8 +404,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             DWORD dwPos = SendMessage(hwndTrack, TBM_GETPOS, 0, 0);
 
-           fb->interOffset = fb->rowLength * dwPos / 100;
-           fb->fillBuffer(fb->buffer);
+           //fb->interOffset = fb->rowLength * dwPos / 100;
+           //fb->fillBuffer(fb->buffer);
         }
 
 

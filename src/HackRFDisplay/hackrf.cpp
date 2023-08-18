@@ -1,54 +1,58 @@
 #include "hackrf.h"
-#include "hackrf/HackRFdevice.h"
-#include "SECAM_FrameBuffer/SECAM_FrameBuffer.h"
+#include <libhackrfpp/hackrf_device.h>
+#include <secam_framebuffer/secam_framebuffer.h>
+#include <circular_buffer/circular_buffer.h>
 #include "SoundProcessor/SoundProcessor.h"
 
 int defaultFreq = 770000000;
 
 static void ScreenShotReqest();
 
-SECAM_FrameBuffer* fb;
-HackRFdevice* hackrf;
-std::function<int(hackrf_transfer*)> hackRfCallbackFunc;
-SoundProcessor* sound;
-std::function<void()> screenshotRequestFunc = std::bind(ScreenShotReqest);
+std::shared_ptr<SECAM_FrameBuffer> fb;
+std::shared_ptr<HackRFdevice> hackrf;
+std::shared_ptr<CircularBuffer> circularBuf;
+std::shared_ptr<SoundProcessor> sound;
+std::shared_ptr<HackRFdevice::ICallbackListener> hackRfListener;
 
-int HackRFcallback(hackrf_transfer* transfer)
-{
-    fb->FrameDrawer->HackRFcallback(transfer);
-    sound->HackRFcallback(transfer);
-    return 0;
-}
+class HackRfListenerProxy : public HackRFdevice::ICallbackListener {
+    int onHackRfCallback(hackrf_transfer* transfer) override {
+        circularBuf->onHackRfCallback(transfer);
+        sound->HackRFcallback(transfer);
+        return 0;
+    }
+};
 
-static void ScreenShotReqest()
-{
-    //PostMessage(hWnd, WM_USER_MAKE_SCREENSHOT, 0, 0);
-}
 
 void initHackRf()
 {
     int sampleRate = 15000000;
 
-    hackrf = new HackRFdevice();
-    hackrf->OpenAny();
+    fb = std::make_shared<SECAM_FrameBuffer>(sampleRate);
+    hackrf = std::make_shared<HackRFdevice>();
+    circularBuf = std::make_shared<CircularBuffer>();
+    sound = std::make_shared <SoundProcessor>(sampleRate);
+    hackRfListener = std::make_shared<HackRfListenerProxy>();
+
+    hackrf->openAny();
     hackrf->set_freq(defaultFreq);
     hackrf->set_sample_rate(sampleRate);
     hackrf->amp_enable(true);
     hackrf->set_txvga_gain(17);
 
+    hackrf->setCallbackListener(hackRfListener);
+    circularBuf->setListener(fb);
 
-    fb = new SECAM_FrameBuffer(sampleRate, &screenshotRequestFunc);
-    sound = new SoundProcessor(sampleRate);
-    hackRfCallbackFunc = std::bind(HackRFcallback, std::placeholders::_1);
-    hackrf->startTransmit(&hackRfCallbackFunc);
+
+    hackrf->startTransmit();
 }
 
 void closeHackRf()
 {
     hackrf->transferAbort();
-    hackrf->Close();
-    delete sound;
-    delete fb;
+    hackrf->close();
+
+    sound.reset();
+    hackrf.reset();
 }
 
 // чтобы кадр был в границах видимого растра, нужно его смещать

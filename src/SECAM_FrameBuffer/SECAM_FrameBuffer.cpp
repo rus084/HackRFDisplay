@@ -1,99 +1,119 @@
-#include "SECAM_FrameBuffer.h"
-
+#include "secam_framebuffer.h"
+#include <memory>
+#include <vector>
 
 constexpr auto BLACK_LEVEL = 80;
 constexpr auto PITCH_LEVEL = 85;
 constexpr auto SYNC_LEVEL = 100;
 constexpr auto WHITE_LEVEL = 5;
 
-SECAM_FrameBuffer::SECAM_FrameBuffer(int sample_rate, std::function<void()>* frameRequest)
+SECAM_FrameBuffer::SECAM_FrameBuffer(int sampleRate)
 {
-	this->sample_rate = sample_rate;
-	FrameDrawer = new CyclicBuffer();
-	FrameDrawer->setCompleteCallback(frameRequest);
-	FrameDrawer->setHalfCompleteCallback(frameRequest);
+	int buffer_count = sampleRate / 25;
+	// because we have I and Q part
+	bufferSize_ = buffer_count * 2;
 
-	// because we have I and Q part, which is byte
-	int buffer_count = sample_rate / 25;
-	rows = 625;
-	visibleRows = 574;
-	collums = buffer_count / rows;
-	visibleCollums = collums - ((collums * 120) / 640);
-	bufferSize = buffer_count * 2;
-	rowLength = bufferSize / rows;
-	buffer = new char[bufferSize];
-	interOffset = (rowLength / 2) - (rowLength / 4);
-	fillBuffer(buffer);
-	FrameDrawer->setNewBuffer(bufferSize, buffer);
+	collums_ = buffer_count / rows_;
+	visibleCollums_ = collums_ - ((collums_ * 120) / 640);
+	rowLength_ = bufferSize_ / rows_;
+
+	interOffset = (rowLength_ / 2) - (rowLength_ / 4);
+
+	buffer_ = makeBuffer();
+	//shadowBuffer_ = makeBuffer();
+}
+
+void SECAM_FrameBuffer::setListener(std::weak_ptr<IListener> listener) {
+	listener_ = listener;
+}
+
+std::shared_ptr<std::vector<int8_t> > SECAM_FrameBuffer::onSentCallback() {
+	if (auto listener = listener_.lock()) {
+		listener->onFrameRequest();
+	}
+
+	return buffer_;
+}
+
+std::shared_ptr<std::vector<int8_t> > SECAM_FrameBuffer::onHalfSentCallback() {
+	if (auto listener = listener_.lock()) {
+		listener->onFrameRequest();
+	}
+
+	return buffer_;
 }
 
 // https://helpiks.org/5-22006.html
-void SECAM_FrameBuffer::fillBuffer(char* buf)
+std::shared_ptr<std::vector<int8_t> > SECAM_FrameBuffer::makeBuffer()
 {
-	memset(buf, BLACK_LEVEL, bufferSize);
-	int RowPitchLen = (rowLength * 120) / 640;
-	int rowSyncLen = (rowLength * 47) / 640;
-	int rowSyncFromPitchOffset = (rowLength * 15) / 640;
+	auto buffer = std::make_shared<std::vector<int8_t> >(bufferSize_, BLACK_LEVEL);
+
+	auto buf = buffer->data();
+
+	int RowPitchLen = (rowLength_ * 120) / 640;
+	int rowSyncLen = (rowLength_ * 47) / 640;
+	int rowSyncFromPitchOffset = (rowLength_ * 15) / 640;
+
 	// https://studfile.net/preview/1666872/page:31/
-	// гасящие импульсы
 	{ 
-		int f1PinchBeg = getRowIndex(rows - 2) + (rowLength / 2);
-		int f1OverlapLen = bufferSize - f1PinchBeg;
+		int f1PinchBeg = getRowIndex(rows_ - 2) + (rowLength_ / 2);
+		int f1OverlapLen = bufferSize_ - f1PinchBeg;
 		memset(&buf[f1PinchBeg], PITCH_LEVEL, f1OverlapLen);
-		int f1PitchEnd = getRowIndex(23) + (rowLength / 2);
+		int f1PitchEnd = getRowIndex(23) + (rowLength_ / 2);
 		memset(&buf[0], PITCH_LEVEL, f1PitchEnd);
 	}
 
-
 	{
-		int f2PinchBeg = getRowIndex(rows / 2 - 1);
-		int f2PitchEnd = getRowIndex(rows / 2 + 24);
+		int f2PinchBeg = getRowIndex(rows_ / 2 - 1);
+		int f2PitchEnd = getRowIndex(rows_ / 2 + 24);
 		int f2PitchLen = f2PitchEnd - f2PinchBeg;
 		memset(&buf[f2PinchBeg], PITCH_LEVEL, f2PitchLen);
 	}
 
 	{
-		int frameSyncLen = rowLength * 5 / 2;
+		int frameSyncLen = rowLength_ * 5 / 2;
 		memset(&buf[0], SYNC_LEVEL, frameSyncLen);
-		int f2SyncBeg = getRowIndex(rows / 2 + 1) + interOffset;
+		int f2SyncBeg = getRowIndex(rows_ / 2 + 1) + interOffset;
 		memset(&buf[f2SyncBeg], SYNC_LEVEL, frameSyncLen);
 	}
 
-	for (int i = 0; i < rows; i++)
+	for (int i = 0; i < rows_; i++)
 	{
 		int indexBegin = getRowIndex(i);
-		int PitchBeg = indexBegin + (rowLength - RowPitchLen);
+		int PitchBeg = indexBegin + (rowLength_ - RowPitchLen);
 		memset(&buf[PitchBeg], PITCH_LEVEL, RowPitchLen);
 		memset(&buf[PitchBeg + rowSyncFromPitchOffset], SYNC_LEVEL, rowSyncLen);
 	}
+
+	return buffer;
 }
 
 int SECAM_FrameBuffer::getRowIndex(int row)
 {
-	return row * rowLength;
+	return row * rowLength_;
 }
 
 
 int SECAM_FrameBuffer::getFBRowIndex(int row)
 {
-	if (row > visibleRows)
+	if (row > visibleRows_)
 		return 0;
 
 	int tempRow = row / 2;
 	if (row % 2)
 	{
 		tempRow += 23;
-		return tempRow * rowLength;
+		return tempRow * rowLength_;
 	}
 	else
 	{
-		tempRow += rows / 2 + 24;
-		return tempRow * rowLength;
+		tempRow += rows_ / 2 + 24;
+		return tempRow * rowLength_;
 	}
 }
 
 
-static uint16_t Color32BPPTobyte(uint32_t* data)
+static int8_t Color32BPPTobyte(uint32_t* data)
 {
 	unsigned long int temp = *data;
 	unsigned char r = (unsigned char)(temp >> 0) & 0xFF;
@@ -104,26 +124,29 @@ static uint16_t Color32BPPTobyte(uint32_t* data)
 	//float y = (0.299 * r + 0.587 * g + 0.114 * b) / 256.0;
 	float y = (0.2627f * r + 0.678f * g + 0.0593f * b) / 256.0f;
 
-
 	char out = (char)(y * (WHITE_LEVEL - BLACK_LEVEL) + BLACK_LEVEL);
 
-	char ret = (out ) | (out << 8);
-	return ret;
+	return out;
 }
 
 void SECAM_FrameBuffer::LoadBitMap32Bpp(int Xsize, int Ysize, int offsetx, int offsety, char* data)
 {
-	int rowsToDraw = std::min(Ysize, visibleRows);
-	int collumsToDraw = std::min(Xsize, visibleCollums);
+	const auto bufGuard = buffer_;
+
+	int rowsToDraw = std::min(Ysize, visibleRows_);
+	int collumsToDraw = std::min(Xsize, visibleCollums_);
+
+	auto buffer = buffer_->data();
 
 	for (int i = 0; i < rowsToDraw; i++)
 	{
 		uint32_t* inPtr = (uint32_t*) &data[(Xsize * i) * 4];
-		uint16_t* outPtr = (uint16_t*) &buffer[getFBRowIndex(i + offsety)] + offsetx;
+		int8_t* outPtr = &buffer[getFBRowIndex(i + offsety)] + offsetx;
 
 		for (int j = 0; j < collumsToDraw; j++)
 		{
-			uint16_t tmp = Color32BPPTobyte(inPtr++);
+			int8_t tmp = Color32BPPTobyte(inPtr++);
+			*(outPtr++) = tmp;
 			*(outPtr++) = tmp;
 		}
 	}
@@ -136,17 +159,22 @@ void SECAM_FrameBuffer::LoadBitMap32Bpp(int Xsize, int Ysize, char* data) {
 
 void SECAM_FrameBuffer::LoadBitMap32BppMirrorV(int Xsize, int Ysize, char* data)
 {
-	int rowsToDraw = std::min(Ysize, visibleRows);
-	int collumsToDraw = std::min(Xsize, visibleCollums);
+	const auto bufGuard = buffer_;
+
+	int rowsToDraw = std::min(Ysize, visibleRows_);
+	int collumsToDraw = std::min(Xsize, visibleCollums_);
+
+	auto buffer = buffer_->data();
 
 	for (int i = 0; i < rowsToDraw; i++)
 	{
 		uint32_t* inPtr = (uint32_t*) & data[(Xsize * i) * 4];
-		uint16_t* outPtr = (uint16_t*)&buffer[getFBRowIndex(rowsToDraw - 1 - i)];
+		int8_t* outPtr = &buffer[getFBRowIndex(rowsToDraw - 1 - i)];
 
 		for (int j = 0; j < collumsToDraw; j++)
 		{
-			uint16_t tmp = Color32BPPTobyte(inPtr++);
+			int8_t tmp = Color32BPPTobyte(inPtr++);
+			*(outPtr++) = tmp;
 			*(outPtr++) = tmp;
 		}
 	}
