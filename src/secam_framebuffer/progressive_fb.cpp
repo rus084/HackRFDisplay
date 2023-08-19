@@ -1,4 +1,4 @@
-#include "secam_framebuffer.h"
+#include "progressive_fb.h"
 #include <memory>
 #include <vector>
 
@@ -7,23 +7,27 @@ constexpr auto PITCH_LEVEL = 85;
 constexpr auto SYNC_LEVEL = 100;
 constexpr auto WHITE_LEVEL = 5;
 
-SECAM_FrameBuffer::SECAM_FrameBuffer()
+ProgressiveFB::ProgressiveFB()
 {
-	int buffer_count = SAMPLE_RATE / 25;
+	int buffer_count = SAMPLE_RATE / frameRate;
+	int collums = buffer_count / rows_;
+
+	// fix rounding 
+	buffer_count = collums * rows_;
+
+	collums_ = buffer_count / rows_;
+
 	// because we have I and Q part
 	bufferSize_ = buffer_count * 2;
 
-	collums_ = buffer_count / rows_;
+	
 	visibleCollums_ = collums_ - ((collums_ * 120) / 640);
-	rowLength_ = bufferSize_ / rows_;
-
-	interOffset = (rowLength_ / 2) - (rowLength_ / 4);
 
 	buffer_ = makeBuffer();
 	//shadowBuffer_ = makeBuffer();
 }
 
-std::shared_ptr<std::vector<int8_t> > SECAM_FrameBuffer::onSentCallback() {
+std::shared_ptr<std::vector<int8_t> > ProgressiveFB::onSentCallback() {
 	if (auto listener = listener_.lock()) {
 		listener->onFrameRequest();
 	}
@@ -31,52 +35,46 @@ std::shared_ptr<std::vector<int8_t> > SECAM_FrameBuffer::onSentCallback() {
 	return buffer_;
 }
 
-std::shared_ptr<std::vector<int8_t> > SECAM_FrameBuffer::onHalfSentCallback() {
-	if (auto listener = listener_.lock()) {
-		listener->onFrameRequest();
-	}
+std::shared_ptr<std::vector<int8_t> > ProgressiveFB::onHalfSentCallback() {
+	//if (auto listener = listener_.lock()) {
+	//	listener->onFrameRequest();
+	//}
 
 	return nullptr;
 }
 
 // https://helpiks.org/5-22006.html
-std::shared_ptr<std::vector<int8_t> > SECAM_FrameBuffer::makeBuffer()
+std::shared_ptr<std::vector<int8_t> > ProgressiveFB::makeBuffer()
 {
 	auto buffer = std::make_shared<std::vector<int8_t> >(bufferSize_, BLACK_LEVEL);
-
 	auto buf = buffer->data();
-
-	int RowPitchLen = (rowLength_ * 120) / 640;
-	int rowSyncLen = (rowLength_ * 47) / 640;
-	int rowSyncFromPitchOffset = (rowLength_ * 15) / 640;
 
 	// https://studfile.net/preview/1666872/page:31/
 	{ 
-		int f1PinchBeg = getRowIndex(rows_ - 2) + (rowLength_ / 2);
+		int f1PinchBeg = getRowIndex(rows_ - 2);
 		int f1OverlapLen = bufferSize_ - f1PinchBeg;
+		int f1PitchEnd = getRowIndex(23);
+
 		memset(&buf[f1PinchBeg], PITCH_LEVEL, f1OverlapLen);
-		int f1PitchEnd = getRowIndex(23) + (rowLength_ / 2);
 		memset(&buf[0], PITCH_LEVEL, f1PitchEnd);
 	}
 
+
+	int rowLength = collums_ * 2;
 	{
-		int f2PinchBeg = getRowIndex(rows_ / 2 - 1);
-		int f2PitchEnd = getRowIndex(rows_ / 2 + 24);
-		int f2PitchLen = f2PitchEnd - f2PinchBeg;
-		memset(&buf[f2PinchBeg], PITCH_LEVEL, f2PitchLen);
+		int frameSyncLen = rowLength * 2;
+		memset(&buf[0], SYNC_LEVEL, frameSyncLen);
 	}
 
-	{
-		int frameSyncLen = rowLength_ * 5 / 2;
-		memset(&buf[0], SYNC_LEVEL, frameSyncLen);
-		int f2SyncBeg = getRowIndex(rows_ / 2 + 1) + interOffset;
-		memset(&buf[f2SyncBeg], SYNC_LEVEL, frameSyncLen);
-	}
+
+	int RowPitchLen = (rowLength * 120) / 640;
+	int rowSyncLen = (rowLength * 47) / 640;
+	int rowSyncFromPitchOffset = (rowLength * 15) / 640;
 
 	for (int i = 0; i < rows_; i++)
 	{
 		int indexBegin = getRowIndex(i);
-		int PitchBeg = indexBegin + (rowLength_ - RowPitchLen);
+		int PitchBeg = indexBegin + (rowLength - RowPitchLen);
 		memset(&buf[PitchBeg], PITCH_LEVEL, RowPitchLen);
 		memset(&buf[PitchBeg + rowSyncFromPitchOffset], SYNC_LEVEL, rowSyncLen);
 	}
@@ -84,28 +82,25 @@ std::shared_ptr<std::vector<int8_t> > SECAM_FrameBuffer::makeBuffer()
 	return buffer;
 }
 
-int SECAM_FrameBuffer::getRowIndex(int row)
+int ProgressiveFB::getRowIndex(int row)
 {
-	return row * rowLength_;
+	int rowLength = collums_ * 2;
+
+	return row * rowLength;
 }
 
 
-int SECAM_FrameBuffer::getFBRowIndex(int row)
+int ProgressiveFB::getFBRowIndex(int row)
 {
 	if (row > visibleRows_)
 		return 0;
 
-	int tempRow = row / 2;
-	if (row % 2)
-	{
-		tempRow += 23;
-		return tempRow * rowLength_;
-	}
-	else
-	{
-		tempRow += rows_ / 2 + 24;
-		return tempRow * rowLength_;
-	}
+	int tempRow = row;
+
+	tempRow += 23;
+	int rowLength = collums_ * 2;
+
+	return tempRow * rowLength;
 }
 
 
@@ -125,7 +120,7 @@ static int8_t Color32BPPTobyte(uint32_t* data)
 	return out;
 }
 
-void SECAM_FrameBuffer::LoadBitMap32Bpp(int Xsize, int Ysize, int offsetx, int offsety, char* data)
+void ProgressiveFB::LoadBitMap32Bpp(int Xsize, int Ysize, int offsetx, int offsety, char* data)
 {
 	const auto bufGuard = buffer_;
 
@@ -148,12 +143,11 @@ void SECAM_FrameBuffer::LoadBitMap32Bpp(int Xsize, int Ysize, int offsetx, int o
 	}
 }
 
-void SECAM_FrameBuffer::LoadBitMap32Bpp(int Xsize, int Ysize, char* data) {
+void ProgressiveFB::LoadBitMap32Bpp(int Xsize, int Ysize, char* data) {
 	LoadBitMap32Bpp(Xsize, Ysize, 0, 0, data);
 }
 
-
-void SECAM_FrameBuffer::LoadBitMap32BppMirrorV(int Xsize, int Ysize, char* data)
+void ProgressiveFB::LoadBitMap32BppMirrorV(int Xsize, int Ysize, char* data)
 {
 	const auto bufGuard = buffer_;
 

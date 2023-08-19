@@ -29,26 +29,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -151,18 +151,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\CyclicBuffer\CyclicBuffer.cpp" />
+    <ClCompile Include="..\..\src\circular_buffer\circular_buffer.cpp" />
     <ClCompile Include="..\..\src\HackRFScreenShoter\GDI_CapturingAnImage.cpp" />
-    <ClCompile Include="..\..\src\hackrf\HackRFdevice.cpp" />
-    <ClCompile Include="..\..\src\SECAM_FrameBuffer\SECAM_FrameBuffer.cpp" />
+    <ClCompile Include="..\..\src\libhackrfpp\hackrf_device.cpp" />
+    <ClCompile Include="..\..\src\libhackrfpp\hackrf_device_list.cpp" />
+    <ClCompile Include="..\..\src\secam_framebuffer\framebuffer_base.cpp" />
+    <ClCompile Include="..\..\src\secam_framebuffer\progressive_fb.cpp" />
+    <ClCompile Include="..\..\src\secam_framebuffer\secam_framebuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\CyclicBuffer\CyclicBuffer.h" />
+    <ClInclude Include="..\..\src\circular_buffer\circular_buffer.h" />
     <ClInclude Include="..\..\src\HackRFScreenShoter\GDI_CapturingAnImage.h" />
     <ClInclude Include="..\..\src\HackRFScreenShoter\Resource.h" />
     <ClInclude Include="..\..\src\HackRFScreenShoter\targetver.h" />
-    <ClInclude Include="..\..\src\hackrf\HackRFdevice.h" />
-    <ClInclude Include="..\..\src\SECAM_FrameBuffer\SECAM_FrameBuffer.h" />
+    <ClInclude Include="..\..\src\libhackrfpp\hackrf_device.h" />
+    <ClInclude Include="..\..\src\libhackrfpp\hackrf_device_list.h" />
+    <ClInclude Include="..\..\src\secam_framebuffer\framebuffer_base.h" />
+    <ClInclude Include="..\..\src\secam_framebuffer\progressive_fb.h" />
+    <ClInclude Include="..\..\src\secam_framebuffer\secam_framebuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\HackRFScreenShoter\GDI_CapturingAnImage.rc" />

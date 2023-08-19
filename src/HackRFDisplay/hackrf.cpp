@@ -27,7 +27,7 @@ void initHackRf()
 {
     int sampleRate = 15000000;
 
-    fb = std::make_shared<SECAM_FrameBuffer>(sampleRate);
+    fb = std::make_shared<SECAM_FrameBuffer>();
     hackrf = std::make_shared<HackRFdevice>();
     circularBuf = std::make_shared<CircularBuffer>();
     sound = std::make_shared <SoundProcessor>(sampleRate);
@@ -35,7 +35,7 @@ void initHackRf()
 
     hackrf->openAny();
     hackrf->set_freq(defaultFreq);
-    hackrf->set_sample_rate(sampleRate);
+    hackrf->set_sample_rate(SECAM_FrameBuffer::SAMPLE_RATE);
     hackrf->amp_enable(true);
     hackrf->set_txvga_gain(17);
 

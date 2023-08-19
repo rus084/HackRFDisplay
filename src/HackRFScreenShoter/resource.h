@@ -11,8 +11,10 @@
 #define IDM_EXIT                        105
 #define IDM_INTEROFFSET_P               106
 #define IDM_INTEROFFSET_M               107
-#define IDM_SLIDER              108
-#define IDC_GDICAPTURINGANIMAGE         109
+#define IDM_PROGRESSIVE                 108
+#define IDM_INTERLEACED                 109
+#define IDM_SLIDER                      110
+#define IDC_GDICAPTURINGANIMAGE         111
 #define IDR_MAINFRAME                   128
 #define IDC_SLIDER1                     1000
 #define IDC_STATIC                      -1

@@ -17,10 +17,8 @@
 #include <functional>
 #include <libhackrfpp/hackrf_device.h>
 #include <secam_framebuffer/secam_framebuffer.h>
+#include <secam_framebuffer/progressive_fb.h>
 #include <circular_buffer/circular_buffer.h>
-
-std::shared_ptr<SECAM_FrameBuffer> fb;
-std::shared_ptr<HackRFdevice> hackrf;
 
 volatile bool Exiting = false;
 
@@ -40,6 +38,32 @@ HWND hWnd;
 
 HANDLE ScreenShotThreadHandle;
 HANDLE ScreenShotThreadSemaphore;
+
+using TFb = ProgressiveFB;
+
+class FbListener : public FrameBufferBase::IListener {
+public:
+    void onFrameRequest() override {
+        // PostMessage(hWnd, WM_USER_MAKE_SCREENSHOT, 0, 0);
+        ReleaseSemaphore(ScreenShotThreadSemaphore, 1, 0);
+    }
+};
+
+std::shared_ptr<FrameBufferBase> fb;
+std::shared_ptr<HackRFdevice> hackrf;
+std::shared_ptr<CircularBuffer> circularBuf;
+std::shared_ptr<FbListener> fbListener;
+
+template <typename T>
+void setFB() {
+    hackrf->set_sample_rate(T::SAMPLE_RATE);
+
+    fb = std::make_shared<T>();
+
+    circularBuf->setListener(fb);
+
+    fb->setListener(fbListener);
+}
 
 int CaptureAnImage(HWND hWnd);
 
@@ -82,6 +106,8 @@ const int screenShotHeight = 570;
 
 int CaptureAnImage(HWND hWnd)
 {
+    auto frameBuffer = fb;
+
     int screenX = (GetSystemMetrics(SM_CXSCREEN) / 2 - screenShotWidth / 2) - 32;
     int screenY = (GetSystemMetrics(SM_CYSCREEN) / 2 - screenShotHeight / 2);
 
@@ -171,7 +197,7 @@ int CaptureAnImage(HWND hWnd)
         lpbitmap,
         (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
-    fb->LoadBitMap32BppMirrorV(bmpScreen.bmWidth, bmpScreen.bmHeight, lpbitmap);
+    frameBuffer->LoadBitMap32BppMirrorV(bmpScreen.bmWidth, bmpScreen.bmHeight, lpbitmap);
 
     // Clean up.
 done:
@@ -181,8 +207,6 @@ done:
 
     return 0;
 }
-
-
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -198,35 +222,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         1,  // maximum count
         NULL);          // unnamed semaphore
 
-    int sampleRate = 15000000;
-
     hackrf = std::make_shared<HackRFdevice>();
     hackrf->openAny();
     hackrf->set_freq(770000000);
-    hackrf->set_sample_rate(sampleRate);
     hackrf->amp_enable(false);
     hackrf->set_txvga_gain(10);
 
     
-    auto circularBuf = std::make_shared<CircularBuffer>();
-    fb = std::make_shared<SECAM_FrameBuffer>(sampleRate);
+    circularBuf = std::make_shared<CircularBuffer>();
+    fbListener = std::make_shared<FbListener>();
 
-
-    class FbListener : public SECAM_FrameBuffer::IListener {
-    public:
-        void onFrameRequest() override {
-            // PostMessage(hWnd, WM_USER_MAKE_SCREENSHOT, 0, 0);
-            ReleaseSemaphore(ScreenShotThreadSemaphore, 1, 0);
-        }
-    };
-
-    auto fbListener = std::make_shared<FbListener>();
+    setFB<SECAM_FrameBuffer>();
 
     hackrf->setCallbackListener(circularBuf);
-    circularBuf->setListener(fb);
-    fb->setListener(fbListener);
-
-
     hackrf->startTransmit();
 
 
@@ -375,6 +383,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             //hackrf->set_txvga_gain(--gain);
             //fb->interOffset-= 10;
            // fb->fillBuffer(fb->buffer);
+            break;
+        case IDM_PROGRESSIVE:
+            setFB<ProgressiveFB>();
+            break;
+        case IDM_INTERLEACED:
+            setFB<SECAM_FrameBuffer>();
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);

@@ -5,14 +5,17 @@
 #include "framebuffer_base.h"
 
 
-class SECAM_FrameBuffer 
+class ProgressiveFB 
 	: public FrameBufferBase
 {
 public:
-	static constexpr auto SAMPLE_RATE = 15000000;
+	static constexpr auto SAMPLE_RATE = 7500000;
+	static constexpr auto frameRate = 50;
+	static constexpr int rows_ = 312;
+	static constexpr int visibleRows_ = 288;
 
 public:
-	SECAM_FrameBuffer();
+	ProgressiveFB();
 
 	void LoadBitMap32Bpp(int Xsize, int Ysize, char* data) override;
 	void LoadBitMap32BppMirrorV(int Xsize, int Ysize, char* data) override;
@@ -26,18 +29,12 @@ public:
 	// todo: fix data races with double buffering
 	// std::shared_ptr<std::vector<int8_t> > shadowBuffer_;
 
-	static constexpr int rows_ = 625;
-	static constexpr int visibleRows_ = 574;
-
 	int collums_;
-	int bufferSize_;
-	int rowLength_;
 	int visibleCollums_;
 
+	int bufferSize_;
 
-	int interOffset;
 //private:
-	void drawCompleteCallback();
 	std::shared_ptr<std::vector<int8_t> > makeBuffer();
 	int getRowIndex(int row);
 

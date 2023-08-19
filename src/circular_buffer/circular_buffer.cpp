@@ -40,15 +40,17 @@ int CircularBuffer::onHackRfCallback(hackrf_transfer* transfer)
 
 	bytes_to_read = transfer->valid_length;
 
-	if (!buffer_)
+	auto buffer = buffer_;
+
+	if (!buffer)
 	{
 		memset(transfer->buffer, 0, bytes_to_read);
 		bufferOverfloved();
 	}
 	else
 	{
-		size_t bufferLen = buffer_->size();
-		int8_t* bufferData = buffer_->data();
+		size_t bufferLen = buffer->size();
+		int8_t* bufferData = buffer->data();
 
 		int position = 0;
 		while (bytes_to_read > 0)

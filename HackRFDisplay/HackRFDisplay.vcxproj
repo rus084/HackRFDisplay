@@ -19,23 +19,25 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\CyclicBuffer\CyclicBuffer.cpp" />
+    <ClCompile Include="..\src\circular_buffer\circular_buffer.cpp" />
     <ClCompile Include="..\src\HackRFDisplay\hackrf.cpp" />
     <ClCompile Include="..\src\HackRFDisplay\main.cpp" />
-    <ClCompile Include="..\src\hackrf\HackRFdevice.cpp" />
+    <ClCompile Include="..\src\libhackrfpp\hackrf_device.cpp" />
+    <ClCompile Include="..\src\libhackrfpp\hackrf_device_list.cpp" />
     <ClCompile Include="..\src\ljb_vmon\ljb_vmon_dbgprint.c" />
     <ClCompile Include="..\src\ljb_vmon\ljb_vmon_dump_buffer.c" />
     <ClCompile Include="..\src\ljb_vmon\ljb_vmon_guid.c" />
     <ClCompile Include="..\src\ljb_vmon\ljb_vmon_pixel_main.c" />
     <ClCompile Include="..\src\ljb_vmon\ljb_vmon_main.c" />
     <ClCompile Include="..\src\ljb_vmon\notify.c" />
-    <ClCompile Include="..\src\SECAM_FrameBuffer\SECAM_FrameBuffer.cpp" />
+    <ClCompile Include="..\src\secam_framebuffer\secam_framebuffer.cpp" />
     <ClCompile Include="..\src\SoundProcessor\SoundProcessor.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\CyclicBuffer\CyclicBuffer.h" />
+    <ClInclude Include="..\src\circular_buffer\circular_buffer.h" />
     <ClInclude Include="..\src\HackRFDisplay\hackrf.h" />
-    <ClInclude Include="..\src\hackrf\HackRFdevice.h" />
+    <ClInclude Include="..\src\libhackrfpp\hackrf_device.h" />
+    <ClInclude Include="..\src\libhackrfpp\hackrf_device_list.h" />
     <ClInclude Include="..\src\ljb_vmon\driver.h" />
     <ClInclude Include="..\src\ljb_vmon\lci_display_internal_ioctl.h" />
     <ClInclude Include="..\src\ljb_vmon\lci_usbav_guid.h" />
@@ -45,7 +47,7 @@
     <ClInclude Include="..\src\ljb_vmon\notify.h" />
     <ClInclude Include="..\src\ljb_vmon\public.h" />
     <ClInclude Include="..\src\ljb_vmon\resource.h" />
-    <ClInclude Include="..\src\SECAM_FrameBuffer\SECAM_FrameBuffer.h" />
+    <ClInclude Include="..\src\secam_framebuffer\secam_framebuffer.h" />
     <ClInclude Include="..\src\SoundProcessor\SoundProcessor.h" />
     <ClInclude Include="..\src\SoundProcessor\UDPSocket.h" />
   </ItemGroup>
@@ -66,26 +68,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
