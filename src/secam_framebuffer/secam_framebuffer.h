@@ -16,6 +16,7 @@ public:
 
 	void LoadBitMap32Bpp(int Xsize, int Ysize, char* data) override;
 	void LoadBitMap32BppMirrorV(int Xsize, int Ysize, char* data) override;
+	virtual void LoadBitmapGray8(int Xsize, int Ysize, char* data) override;
 	void LoadBitMap32Bpp(int Xsize, int Ysize, int offsetx, int offsety, char* data);
 
 	std::shared_ptr<std::vector<int8_t> > onSentCallback() override;

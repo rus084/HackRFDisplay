@@ -1,6 +1,8 @@
 #include "circular_buffer.h"
 #include <utility>
 
+#include <string.h>
+
 CircularBuffer::CircularBuffer()
 {
 }

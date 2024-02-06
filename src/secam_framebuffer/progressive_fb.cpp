@@ -2,6 +2,8 @@
 #include <memory>
 #include <vector>
 
+#include <string.h>
+
 constexpr auto BLACK_LEVEL = 80;
 constexpr auto PITCH_LEVEL = 85;
 constexpr auto SYNC_LEVEL = 100;
@@ -127,7 +129,7 @@ void ProgressiveFB::LoadBitMap32Bpp(int Xsize, int Ysize, int offsetx, int offse
 	int rowsToDraw = std::min(Ysize, visibleRows_);
 	int collumsToDraw = std::min(Xsize, visibleCollums_);
 
-	auto buffer = buffer_->data();
+	auto buffer = bufGuard->data();
 
 	for (int i = 0; i < rowsToDraw; i++)
 	{
@@ -154,7 +156,7 @@ void ProgressiveFB::LoadBitMap32BppMirrorV(int Xsize, int Ysize, char* data)
 	int rowsToDraw = std::min(Ysize, visibleRows_);
 	int collumsToDraw = std::min(Xsize, visibleCollums_);
 
-	auto buffer = buffer_->data();
+	auto buffer = bufGuard->data();
 
 	for (int i = 0; i < rowsToDraw; i++)
 	{
@@ -170,4 +172,28 @@ void ProgressiveFB::LoadBitMap32BppMirrorV(int Xsize, int Ysize, char* data)
 	}
 }
 
+void ProgressiveFB::LoadBitmapGray8(int Xsize, int Ysize, char* data) {
+	const auto bufGuard = buffer_;
 
+	int rowsToDraw = std::min(Ysize, visibleRows_);
+	int collumsToDraw = std::min(Xsize, visibleCollums_);
+
+	auto buffer = bufGuard->data();
+
+	for (int i = 0; i < rowsToDraw; i++)
+	{
+		uint8_t* inPtr = (uint8_t*) & data[(Xsize * i)];
+		int8_t* outPtr = &buffer[getFBRowIndex(rowsToDraw - 1 - i)];
+
+		for (int j = 0; j < collumsToDraw; j++)
+		{
+			uint8_t pix = *inPtr;
+			inPtr++;
+
+			int8_t tmp = (pix * (WHITE_LEVEL - BLACK_LEVEL) / 255) + BLACK_LEVEL;
+
+			*(outPtr++) = tmp;
+			*(outPtr++) = tmp;
+		}
+	}
+}
