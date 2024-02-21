@@ -4,6 +4,8 @@
 #include <secam_framebuffer/progressive_fb.h>
 #include <circular_buffer/circular_buffer.h>
 
+#include "params.h"
+
 #include <memory>
 #include <atomic>
 #include <condition_variable>
@@ -13,7 +15,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
-#include <stdlib.h>
 
 class FbListener : public FrameBufferBase::IListener {
 public:
@@ -66,34 +67,6 @@ void setFB() {
 
     fb->setListener(fbListener);
 }
-
-struct Params {
-    void printUsage() {
-        printf("Usage: programm fifo width height\n");
-    }
-
-    bool initFromArgs(int argv, char** argc) {
-        if (argv < 4) {
-            printUsage();
-            return false;
-        }
-
-        path = argc[1];
-        width = atoi(argc[2]);
-        height = atoi(argc[3]);
-
-        if (width == 0 || height == 0) {
-            printUsage();
-            return false;
-        }
-
-        return true;
-    }
-
-    char* path;
-    int width;
-    int height;
-};
 
 class FifoReader {
 public:
@@ -151,7 +124,6 @@ private:
     std::thread readThread_;
     std::thread writeThread_;
 };
-
 
 static volatile int keepRunning = 1;
 
