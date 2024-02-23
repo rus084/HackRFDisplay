@@ -19,7 +19,7 @@ SECAM_FrameBuffer::SECAM_FrameBuffer()
 	visibleCollums_ = collums_ - ((collums_ * 120) / 640);
 	rowLength_ = bufferSize_ / rows_;
 
-	interOffset = (rowLength_ / 2) - (rowLength_ / 4);
+	interOffset = (rowLength_ / 2);
 
 	buffer_ = makeBuffer();
 	//shadowBuffer_ = makeBuffer();
@@ -98,7 +98,7 @@ int SECAM_FrameBuffer::getFBRowIndex(int row)
 		return 0;
 
 	int tempRow = row / 2;
-	if (row % 2)
+	if ((row % 2) == 0)
 	{
 		tempRow += 23;
 		return tempRow * rowLength_;
